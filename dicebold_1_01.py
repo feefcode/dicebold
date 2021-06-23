@@ -25,7 +25,7 @@ PROPER ROLL FORMATTING:
 The number prior to the "d" represents how many dice you want to roll. The number after it
 represents the type of die/integer range you're looking for."""
 
-# TODO: Handling for multiple dice types per roll, add name to result, better result formatting.
+# TODO: Handling for multiple dice types per roll, ability to handle parenthesis arithmetic.
 
 import os
 import re as regex
@@ -90,14 +90,27 @@ async def on_message(message):
         num_of_dice = 0
         type_of_dice = 0
         modifier = None
+        sender = message.author.nick
 
-        try:
-            num_of_dice = int(roll_cmd[:roll_cmd.index("d")])
-        except ValueError:
-            await channel.send("**Error**: Not a valid die number! Please only use whole numbers!")
-            failsafe_triggered = True
-            # Checks for the number of dice the user is rolling. If an invalid number of dice
-            # is given (ie, -roll fishd20), the user is told as much asn failsafe is triggered.
+        if sender is None:
+            sender = message.author.name
+            # If the user has a nickname set to the server, the initialization of sender will
+            # create a variable with their preferred nickname. Otherwise, it passes "None" to
+            # the variable. If it's set to None, this assigns it their Discord handle.
+
+        if roll_cmd[0] != "d":
+            try:
+                num_of_dice = int(roll_cmd[:roll_cmd.index("d")])
+            except ValueError:
+                await channel.send("**Error**: Not a valid die number! Please only use whole numbers!")
+                failsafe_triggered = True
+                # Checks for the number of dice the user is rolling. If an invalid number of dice
+                # is given (ie, -roll fishd20), the user is told as much asn failsafe is triggered.
+        else:
+            num_of_dice = 1
+            # This if-else allows the bot to recognize "-roll d20" in addition to "-roll 1d20".
+            # If no number is provided and the first character is the "d" of the die roll, it will
+            # default to rolling the provided die once.
 
         if modcheck(roll_cmd[roll_cmd.index("d")+1:]):
             # Checks whether there's any modifier that needs to be recorded beyond the die roll.
@@ -127,13 +140,15 @@ async def on_message(message):
                 # roller returns None if an invalid expression is submitted.
                 # Redundant safety is important.
             elif modifier is None:
-                await channel.send(f"Roll results: {result_array}\n\nRoll total: "
-                                   f"{sum(result_array)}")
+                await channel.send(f"**{sender}** rolled **{num_of_dice} "
+                                   f"d{type_of_dice}** ➔ {result_array}\n\n"
+                                   f"**Roll total ➔ {sum(result_array)}**")
                 # Returns a modifier-free roll.
             else:
-                await channel.send(f"Roll results: {result_array}\n\n"
-                                   f"Roll total with modifiers: "
-                                   f"{eval(f'{sum(result_array)}{modifier}')}")
+                await channel.send(f"**{sender}** rolled **{num_of_dice} "
+                                   f"d{type_of_dice}** ➔ {result_array}\n\n"
+                                   f"**Roll total with modifiers ➔ "
+                                   f"{eval(f'{sum(result_array)}{modifier}')}**")
                 # Returns a roll, then uses eval() to record the result with modifier applied.
                 #
                 # #################
