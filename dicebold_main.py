@@ -1,7 +1,7 @@
 """
 
 #####################
-### VERSION 1.3.0 ###
+### VERSION 1.4.0 ###
 #####################
 
 #####################
@@ -50,7 +50,13 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 # Gets the token the bot uses for its API access.
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.messages = True
+intents.message_content = True
+# New versions of Discord's API require explicitly specifying non-default permissions for bots,
+# including permission to read messages.
+
+client = discord.Client(intents=intents)
 
 
 def roller(die_num, die_type):
@@ -360,6 +366,15 @@ async def on_message(message):
         # is redundant since they're all displayed individually earlier in the message, but this
         # gives a nice look to the message.
         await channel.send(output_string)
+    """Below is just me being cheeky. Don't worry about it."""
+    # elif message.content.lower().startswith("good to have you back"):
+    #     channel = message.channel
+    #     msg = ""
+    #     if str(message.author) == "REDACTED":
+    #         msg = "Good to be back, boss!"
+    #     else:
+    #         msg = f"Thanks, {set_username(message.author)}!"
+    #     await channel.send(msg)
 
 
 client.run(TOKEN)
